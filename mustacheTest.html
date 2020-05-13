@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mustache Template Engine Test</title>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+        integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
+        integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
+        integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+        crossorigin="anonymous"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.1.0/mustache.min.js"></script>
+    
+    <script>
+        $(document).ready(function(){
+
+            $("#genCommentBtn").click(function(){
+                var comment = getComment();
+                renderComment(comment);
+            });
+
+            $("#genCommentListBtn").click(function(){
+                var commentList = getCommentList();
+                renderCommentList(commentList);
+            });
+
+            $("#clearBtn").click(function(){
+                $("#target").html("");
+            });
+        });
+
+        function getComment(){
+            var commentList = getCommentFile();
+            var id = Math.floor(Math.random() * 500); // 0 ~ 499
+            
+            return commentList[id];
+        }
+
+        function getCommentList(){
+            var commentList = getCommentFile();
+            var postId = Math.floor(Math.random() * 100) + 1; // 1 ~ 100
+
+            return commentList.filter(function(comment){ return comment.postId == postId});
+        }
+
+        function getCommentFile(){
+            var result = "";
+
+            $.ajax({
+                url: "/json/comment.json",
+               type: "get",
+              async: false,
+            success: function(data){
+                        result = data;
+                    }
+            });
+
+            return result;
+        }
+
+        function renderComment(commentObj) {
+
+            $.get("/template/mustacheTemplate.mst",function(template){
+                template = $(template).filter("#single-comment").html();
+                $("#target").append(Mustache.render(template,commentObj));
+            });
+
+        }
+
+        function renderCommentList(commentListObj) {
+
+            $.get("/template/mustacheTemplate.mst",function(template){
+                template = $(template).filter("#comment-list").html();
+                commentListObj = {"commentList": commentListObj};
+                $("#target").append(Mustache.render(template,commentListObj));
+            });
+
+        }
+    </script>
+    <style>
+        .container-fluid {
+            min-height: 100vh;
+            padding-top: calc(50vh - 300px);
+            background-color: lightgrey;
+        }
+
+        .info-card {
+            width: 600px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="card info-card">
+            <div class="row">
+                <div class="col-6">
+                    <button type="button" id="genCommentBtn" class="btn btn-primary btn-lg btn-block">Gen new comment</button>
+                </div>
+                <div class="col-6">
+                    <button type="button" id="genCommentListBtn" class="btn btn-primary btn-lg btn-block">Gen new comment list</button>
+                </div>
+            </div>
+            <br/>
+            <div class="row">
+                <div class="col-12">
+                    <button type="button" id="clearBtn" class="btn btn-danger btn-lg btn-block">Clear</button>
+                </div>
+            </div>
+        </div>
+        <div id="target">
+            <br/>
+    <div class="card info-card">
+        <div class="card-header">
+            <div class="row">
+                <div class="col-3"> UserId: </div>
+                <div class="col-3"> {{ userId }} </div>
+                <div class="col-3"> Id: </div>
+                <div class="col-3"> {{ id }} </div>
+            </div>
+        </div>
+        <div class="card-header">
+            <div class="row">
+                <div class="col-3"> Title: </div>
+                <div class="col-9"> {{ title }} </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col">
+                    {{ body }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+        </div>
+    </div>
+</body>
+</html>

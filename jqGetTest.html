@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>jQuery Get Test</title>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+        integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
+        integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
+        integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+        crossorigin="anonymous"></script>
+    
+    <script>
+        /*
+        *  定義模版資料輸出區域(id="target-xxx")是否有資料
+        *  無資料 false / 有資料 true
+        */
+        var hasDataInRenderArea = false;
+
+        $(document).ready(function(){
+            $("#data-trig-btn").click(function(){
+                if(hasDataInRenderArea){
+                    resetRenderArea();
+                } else {
+                    getTemplateData();
+                }
+
+                toggleTrigButtonContent();
+            });
+            
+        });
+
+        function getTemplateData(){
+            /* 
+            *  讀取自己寫好的模板, 取得全部或取得期中特定的資料
+            *  副檔名可自行指定, 此處mst為稍後須搭配模版引擎Mustache的簡寫
+            *  若需IDE的工具提示, 副檔名可採用html
+            */
+            $.ajax({
+                url: "/template/template.mst",
+               type: "get",
+              async: false,
+            success: function(template){
+                        // 讀取的檔案中的所有內容
+                        console.log(template);
+
+                        /*
+                        *  讀取的檔案中, 使用id名稱作為過濾依據, 
+                        *  會取得該id標籤內的內容(不包含該id標籤)
+                        *  
+                        *  範例如下:
+                        *  
+                        *  - 模版檔案內容
+                        *  <div id="src-A">
+                        *     <button type="button" class="btn btn-primary">Just A Button</button>
+                        *  </div>
+                        *
+                        *  - 呼叫檔案JS內容
+                        *  $.get("/模版檔案路徑/模版檔案完整檔名",function(template){
+                        *     console.log($(template).filter("#src-A").html());
+                        *  })
+                        * 
+                        *  - 最終log結果
+                        *  <button type="button" class="btn btn-primary">Just A Button</button>
+                        *
+                        */ 
+                        console.log("After filter : user-btn");
+                        console.log($(template).filter("#user-btn").html());
+                        
+                        console.log("After filter : customer-btn");
+                        console.log($(template).filter("#customer-btn").html());
+                        
+                        console.log("After filter : boss-btn");
+                        console.log($(template).filter("#boss-btn").html());
+
+                        // 輸出所有模版內容於id="target-all"
+                        $("#target-all").html(template);
+
+                        $("#target-single-A").html($(template).filter("#user-btn").html());
+                        $("#target-single-B").html($(template).filter("#customer-btn").html());
+                        $("#target-single-C").html($(template).filter("#boss-btn").html());
+
+                        // 暫時有置於get區塊會無法更改其值的Bug, 待修
+                        hasDataInRenderArea = true;
+                    }
+            });
+        }
+
+        // 清空所有輸出標籤的內容
+        function resetRenderArea(){
+            $("#target-all").html("我沒有資料");
+            $("#target-single-A").html("我沒有資料");
+            $("#target-single-B").html("我沒有資料");
+            $("#target-single-C").html("我沒有資料");
+
+            hasDataInRenderArea = false;
+        }
+
+        /* 
+        *  依據目前模版資料輸出區域(id="target-xxx")是否有資料
+        *  決定按鈕顯示的形式
+        */
+        function toggleTrigButtonContent(){
+            if(hasDataInRenderArea){
+                $("#data-trig-btn").removeClass("btn-success btn-danger");
+                $("#data-trig-btn").addClass("btn-danger");
+                $("#data-trig-btn").text("刪除資料");
+            } else {
+                $("#data-trig-btn").removeClass("btn-success btn-danger");
+                $("#data-trig-btn").addClass("btn-success");
+                $("#data-trig-btn").text("取得資料");
+            }
+        }
+    </script>
+    <style>
+        .container-fluid {
+            height: 100vh;
+            padding-top: calc(50vh - 300px);
+            background-color: lightgrey;
+        }
+        .info-card {
+            width: 500px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="card info-card">
+            <h5 class="card-header">jQuery $.get() Test</h5>
+            <div class="card-body">
+                <button type="button" id="data-trig-btn" class="btn btn-block btn-success">取得資料</button>
+                <hr/>
+                <br/>
+                <h6><b>全輸出區塊</b></h6>
+                <div id="target-all">我沒有資料</div>
+                <br/>
+                <h6><b>個別輸出區塊A</b></h6>
+                <div id="target-single-A">我沒有資料</div>
+                <br/>
+                <h6><b>個別輸出區塊B</b></h6>
+                <div id="target-single-B">我沒有資料</div>
+                <br/>
+                <h6><b>個別輸出區塊C</b></h6>
+                <div id="target-single-C">我沒有資料</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

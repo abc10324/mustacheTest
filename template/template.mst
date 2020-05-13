@@ -1,0 +1,13 @@
+<div id="user-btn">
+    <button type="button" class="btn btn-block btn-primary">User Button</button>
+</div>
+<hr/>
+<div id="customer-btn">
+    <button type="button" class="btn btn-block btn-warning">Customer Button</button>
+</div>
+<hr/>
+<div id="boss-btn">
+    <button type="button" class="btn btn-block btn-success">Boss Button</button>
+</div>
+<hr/>
+
