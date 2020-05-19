@@ -4,7 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
     <script src="https://cdn.ckeditor.com/ckeditor5/19.0.0/balloon-block/ckeditor.js"></script>
+    <script>
+        var editor = null;
+
+        $(document).ready(function(){
+            $("#logBtn").click(function(){
+                if(editor != null){
+                    console.log(editor.getData());
+                } else {
+                    alert("CKEditor 初始化失敗");
+                }
+            });
+            $("#addBtn").click(function(){
+                if(editor != null){
+                    editor.setData(editor.getData() + '<a href="#stage1">連結</a>');
+                    console.log(editor.getData());
+                } else {
+                    alert("CKEditor 初始化失敗");
+                }
+            });
+        });
+    </script>
 
     <style>
         #editor {
@@ -21,9 +43,27 @@
     <script>
         BalloonEditor
             .create( document.querySelector( '#editor' ) )
+            .then( editorInstance => {
+                editor = editorInstance;
+                editor.model.document.on( 'change:data', () => {
+                    console.log( 'The Document has changed!' );
+                    console.log( editor.getData() );
+                    console.log( $(editor.getData()).length );
+                    let tagTotalNum = $(editor.getData()).length;
+                    $(editor.getData()).each(function(index,element){
+                        if((index + 1) == tagTotalNum){
+                            console.log(element);
+                            console.log($(element).text());
+                        }
+                    });
+                } );
+            })
             .catch( error => {
                 console.error( error );
-            } );
+            });
     </script>
+    <button id="logBtn">Log From CKEditor Input Area</button>
+    <button id="addBtn">Add Content To CKEditor Input Area</button>
+
 </body>
 </html>
