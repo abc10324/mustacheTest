@@ -4,12 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+        integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
+        integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
+        integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+        crossorigin="anonymous"></script>
+    
+    
     <script src="https://cdn.ckeditor.com/ckeditor5/19.0.0/balloon-block/ckeditor.js"></script>
     <script>
         var editor = null;
 
         $(document).ready(function(){
+
+            // CKEditor 初始化
+            BalloonEditor
+            .create( document.querySelector( '#editor' ) )
+            .then( editorInstance => {
+                editor = editorInstance;
+
+                // 將輸入區綁定change事件(:data為僅限輸入值更動,不包含輸入區中工具列及滑鼠的任何操作)
+                editor.model.document.on( 'change:data', () => {
+                    // console.log( 'The Document has changed!' );
+
+                    let lastTagText = getLastOuterTagText($(editor.getData()));
+
+                    atSignCheck(lastTagText);
+
+                } );
+            })
+            .catch( error => {
+                console.error( error );
+            });
+
             $("#logBtn").click(function(){
                 if(editor != null){
                     console.log(editor.getData());
@@ -26,6 +57,93 @@
                 }
             });
         });
+
+        function getLastOuterTagText(inputElements){
+            /*
+            * 輸入區中的"最外層"tag數量
+            * ex:
+            * <p> AAA </p>
+            * <p> BBB <b>DDD</b> </p>
+            * <p> CCC <b>EEE</b> </p>
+            * 
+            * 總共數量為3
+            */
+            let tagTotalNum = inputElements.length;
+
+            let returnStr = "";
+            
+            // 將輸入區的"最外層"標籤一個一個取出來
+            inputElements.each(function(index,element){
+
+                // 只取最後一段標籤內的值檢查
+                if((index + 1) == tagTotalNum){
+                    returnStr = $(element).text();
+                }
+            });
+
+            return returnStr;
+        }
+
+        // 檢查@是否出現於輸入區
+        function atSignCheck(text){
+            let strLen = text.length;
+            /*
+            * 1.檢查輸入字串的長度是否為零(避免裁切字串出問題)
+            * 2.檢查輸入字串最後一個字母是否為 '@'
+            * 3.檢查倒數第二個字母是否為空白 (需空格後方可使用@功能)
+            * 4.檢查輸入字串是否只有一個字母 (解決直接輸入@的情況)
+            * 5.第二點為必要條件,三四點則符合其一及可啟動 
+            */
+            if (strLen != 0) {
+                let atCheck = (text.substring(strLen - 1) == "@");
+                let emptyCheck = (text.substring(strLen - 2,strLen - 1) == " ");
+                let leadCheck = (strLen == 1);
+
+                if (atCheck && (emptyCheck || leadCheck)) {
+                    $('#exampleModal').modal('show');
+                }
+            }
+
+        }
+
+        /*
+        * 好友名單點擊某位好友後執行以下動作:
+        * 1.將選擇的好友名稱回寫到輸入區域的尾端
+        * 2.關閉好友名單
+        */
+        function setFriend(friendName){
+            let tagTotalNum = $(editor.getData()).length;
+                    
+            // 用於儲存輸入區的標籤
+            // 並在最後一段標籤中偵測並修改
+            let input = "";
+
+            // 檢查是否有偵測到輸入@的事件
+            let changeFlag = false;
+
+            $(editor.getData()).each(function(index,element){
+
+                // 只取最後一段標籤內的值檢查
+                if((index + 1) == tagTotalNum){
+
+                    let targetElement = $(element); 
+                    let originalText = targetElement.text();
+                    let strLen = originalText.length;
+                    let modifiedText = originalText.substring(0,strLen - 1) + "<a href=\"#stage1\">@" + friendName + "</a>&nbsp;";
+
+                    targetElement.html(modifiedText);
+
+                    input += targetElement.prop('outerHTML');
+                } else {
+                    input += $(element).prop('outerHTML');
+                }
+
+            });
+
+            editor.setData(input);
+
+            $('#exampleModal').modal('hide');
+        }
     </script>
 
     <style>
@@ -40,30 +158,36 @@
     <div id="editor">
         <p>This is some sample content.</p>
     </div>
-    <script>
-        BalloonEditor
-            .create( document.querySelector( '#editor' ) )
-            .then( editorInstance => {
-                editor = editorInstance;
-                editor.model.document.on( 'change:data', () => {
-                    console.log( 'The Document has changed!' );
-                    console.log( editor.getData() );
-                    console.log( $(editor.getData()).length );
-                    let tagTotalNum = $(editor.getData()).length;
-                    $(editor.getData()).each(function(index,element){
-                        if((index + 1) == tagTotalNum){
-                            console.log(element);
-                            console.log($(element).text());
-                        }
-                    });
-                } );
-            })
-            .catch( error => {
-                console.error( error );
-            });
-    </script>
+    
     <button id="logBtn">Log From CKEditor Input Area</button>
     <button id="addBtn">Add Content To CKEditor Input Area</button>
+
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">好友名單</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="list-group">
+                        <span class="list-group-item list-group-item-action" onclick="setFriend('好友A')" >好友A</span>
+                        <span class="list-group-item list-group-item-action" onclick="setFriend('好友B')" >好友B</span>
+                        <span class="list-group-item list-group-item-action" onclick="setFriend('好友C')" >好友C</span>
+                        <span class="list-group-item list-group-item-action" onclick="setFriend('好友D')" >好友D</span>
+                        <span class="list-group-item list-group-item-action" onclick="setFriend('好友E')" >好友E</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>
