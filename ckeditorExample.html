@@ -16,6 +16,9 @@
     
     
     <script src="https://cdn.ckeditor.com/ckeditor5/19.0.0/balloon-block/ckeditor.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.1.0/mustache.min.js"></script>
+
     <script>
         var editor = null;
 
@@ -23,7 +26,9 @@
 
             // CKEditor 初始化
             BalloonEditor
-            .create( document.querySelector( '#editor' ) )
+            .create( document.querySelector( '#editor' ),{
+                placeholder: '回覆...'
+            } )
             .then( editorInstance => {
                 editor = editorInstance;
 
@@ -41,21 +46,10 @@
                 console.error( error );
             });
 
-            $("#logBtn").click(function(){
-                if(editor != null){
-                    console.log(editor.getData());
-                } else {
-                    alert("CKEditor 初始化失敗");
-                }
+            $("#sendBtn").click(function(){
+                sendReply();
             });
-            $("#addBtn").click(function(){
-                if(editor != null){
-                    editor.setData(editor.getData() + '<a href="#stage1">連結</a>');
-                    console.log(editor.getData());
-                } else {
-                    alert("CKEditor 初始化失敗");
-                }
-            });
+
         });
 
         function getLastOuterTagText(inputElements){
@@ -144,24 +138,128 @@
 
             $('#exampleModal').modal('hide');
         }
+
+        function sendReply(){
+            if(editor != null) {
+
+                if($("#username").val() == "" || editor.getData() == ""){
+                    alert("輸入不可為空!!! 請重新輸入!!!");
+                    return;
+                }
+
+                let jsonObj = {
+                    stage : $("#reply-area .info-card").length + 1,
+                    username : $("#username").val(),
+                    time : getCurrentTimeStr(),
+                    content : editor.getData()
+                };
+
+                console.log(jsonObj);
+
+                renderReply(jsonObj);
+
+                clearInput();
+            }
+        }
+
+        function renderReply(replyObj){
+            $.get("/template/mustacheTemplate.mst",function(template){
+                template = $(template).filter("#reply").html();
+                $("#reply-area").append(Mustache.render(template,replyObj));
+            });
+        }
+
+        function getCurrentTimeStr(){
+            var now = new Date();
+
+            var timeStr = (now.getMonth() + 1) + "-" + now.getDate() + " ";
+            timeStr += now.getHours() + ":" + now.getMinutes();
+
+            return timeStr;
+        }
+
+        function clearInput(){
+            if(editor != null){
+                editor.setData("");
+                $("#username").val("");
+            }
+        }
     </script>
 
     <style>
-        #editor {
-            width: 500px;
+        .container-fluid {
+            min-height: 100vh;
+            padding-top: 15px;
+            background-color: lightgrey;
+        }
+
+        .info-card {
+            width: 600px;
             margin: 0 auto;
+            margin-top: 15px;
+            padding: 15px;
+        }
+
+        #editor {
+            width: 100%;
+            margin-left: 10px;
+            margin-bottom: 15px;
+            /* background-color: aquamarine; */
+            /* margin: 0 auto; */
         }
     </style>
 </head>
 <body>
-    <h1>Balloon editor</h1>
-    <div id="editor">
-        <p>This is some sample content.</p>
+    <div class="container-fluid">
+        <div class="card info-card">
+            <div class="card-header">
+                <h2>Balloon Editor Test</h2>
+            </div>
+            <div class="card-body">
+                <hr/>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text" id="basic-addon1">From</span>
+                            </div>
+                            <input id="username" type="text" class="form-control" placeholder="Type your name here" aria-label="Username" aria-describedby="basic-addon1">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <div id="editor">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <button id="sendBtn" type="button" class="btn btn-primary btn-lg btn-block">送出回覆</button>
+                </div>
+            </div>
+        </div>
+        <div id="reply-area">
+            <div class="card info-card">
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col-12"> Sam </div>
+                    </div>
+                    <div class="row text-muted">
+                        <div class="col-12"> <span>B1</span> | 05-03 10:00 </div> 
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12">
+                            AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     
-    <button id="logBtn">Log From CKEditor Input Area</button>
-    <button id="addBtn">Add Content To CKEditor Input Area</button>
-
+    
     <!-- Modal -->
     <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
         aria-hidden="true">

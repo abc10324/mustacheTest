@@ -131,3 +131,25 @@
         </div>
     </div>
 </div>
+
+--------------------------------------------------------------
+
+<div id="reply">
+    <div id="b{{ stage }}" class="card info-card">
+        <div class="card-header">
+            <div class="row">
+                <div class="col-12"> {{ username }} </div>
+            </div>
+            <div class="row text-muted">
+                <div class="col-12"> <span>B{{ stage }}</span> | {{ time }} </div> 
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-12">
+                    {{{ content }}}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
