@@ -143,7 +143,7 @@
         * 1.將選擇的好友名稱回寫到輸入區域的尾端
         * 2.關閉好友名單
         */
-        function setStage(friendName){
+        function setStage(stageNum){
             let tagTotalNum = $(editor.getData()).length;
                     
             // 用於儲存輸入區的標籤
@@ -161,7 +161,10 @@
                     let targetElement = $(element); 
                     let originalText = targetElement.text();
                     let strLen = originalText.length;
-                    let modifiedText = originalText.substring(0,strLen - 1) + getStageLink(friendName);
+
+                    let hasAtSign = originalText.lastIndexOf("@") == (strLen - 1);
+                    let modifiedText = hasAtSign ? originalText.substring(0,strLen - 1) : originalText; 
+                    modifiedText += getStageLink(stageNum);
 
                     targetElement.html(modifiedText);
 
@@ -258,6 +261,11 @@
             margin-left: 10px;
             margin-bottom: 15px;
         }
+
+        .stage-value {
+            cursor: pointer;
+        }
+
     </style>
 </head>
 <body>
@@ -296,7 +304,7 @@
                         <div class="col-12"> Sam </div>
                     </div>
                     <div class="row text-muted">
-                        <div class="col-12"> <span class="stage-value" >B1</span> | 05-03 10:00 </div> 
+                        <div class="col-12"> <span class="stage-value" onclick="setStage('B1')">B1</span> | 05-03 10:00 </div> 
                     </div>
                 </div>
                 <div class="card-body">

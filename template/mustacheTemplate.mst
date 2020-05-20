@@ -141,7 +141,7 @@
                 <div class="col-12"> {{ username }} </div>
             </div>
             <div class="row text-muted">
-                <div class="col-12"> <span class="stage-value" >B{{ stage }}</span> | {{ time }} </div> 
+                <div class="col-12"> <span class="stage-value" onclick="setStage('B{{ stage }}')">B{{ stage }}</span> | {{ time }} </div> 
             </div>
         </div>
         <div class="card-body">
