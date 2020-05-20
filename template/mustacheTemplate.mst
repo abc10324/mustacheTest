@@ -135,13 +135,13 @@
 --------------------------------------------------------------
 
 <div id="reply">
-    <div id="b{{ stage }}" class="card info-card">
+    <div id="B{{ stage }}" class="card info-card">
         <div class="card-header">
             <div class="row">
                 <div class="col-12"> {{ username }} </div>
             </div>
             <div class="row text-muted">
-                <div class="col-12"> <span>B{{ stage }}</span> | {{ time }} </div> 
+                <div class="col-12"> <span class="stage-value" >B{{ stage }}</span> | {{ time }} </div> 
             </div>
         </div>
         <div class="card-body">
@@ -152,4 +152,18 @@
             </div>
         </div>
     </div>
+</div>
+
+--------------------------------------------------------------
+
+<div id="stage">
+    <a href="#{{ stage }}">{{ stage }}</a>&nbsp;
+</div>
+
+--------------------------------------------------------------
+
+<div id="stage-list">
+{{ #stageList }}
+    <span class="list-group-item list-group-item-action" onclick="setStage('{{ stage }}')" >{{ stage }}</span>
+{{ /stageList }}
 </div>

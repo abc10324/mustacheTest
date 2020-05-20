@@ -21,9 +21,24 @@
 
     <script>
         var editor = null;
+        var replyTemplate = "";
+        var stageLinkTemplate = "";
+        var stageListTemplate = "";
+        
 
         $(document).ready(function(){
 
+            initCKEditor();
+
+            initTemplate();
+
+            $("#sendBtn").click(function(){
+                sendReply();
+            });
+
+        });
+
+        function initCKEditor(){
             // CKEditor 初始化
             BalloonEditor
             .create( document.querySelector( '#editor' ),{
@@ -45,12 +60,21 @@
             .catch( error => {
                 console.error( error );
             });
+        }
 
-            $("#sendBtn").click(function(){
-                sendReply();
+        // 取得所有template並儲存於變數中以供隨時取用
+        function initTemplate(){
+            $.ajax({
+                url: "/template/mustacheTemplate.mst",
+               type: "get",
+              async: false,
+            success: function(template){
+                        replyTemplate = $(template).filter("#reply").html();
+                        stageLinkTemplate = $(template).filter("#stage").html();
+                        stageListTemplate = $(template).filter("#stage-list").html();
+                    }
             });
-
-        });
+        }
 
         function getLastOuterTagText(inputElements){
             /*
@@ -94,18 +118,32 @@
                 let leadCheck = (strLen == 1);
 
                 if (atCheck && (emptyCheck || leadCheck)) {
-                    $('#exampleModal').modal('show');
+                    showStageSelectDialog();
+                    
                 }
             }
 
         }
+
+        function showStageSelectDialog(){
+            var stageListObj = { stageList : [] };
+
+            $("#reply-area .stage-value").each(function(index,element){
+                stageListObj.stageList[index] = {stage : $(element).text()};
+            });
+
+            renderStageList(stageListObj);
+
+            $('#stageListModal').modal('show');
+        }
+    
 
         /*
         * 好友名單點擊某位好友後執行以下動作:
         * 1.將選擇的好友名稱回寫到輸入區域的尾端
         * 2.關閉好友名單
         */
-        function setFriend(friendName){
+        function setStage(friendName){
             let tagTotalNum = $(editor.getData()).length;
                     
             // 用於儲存輸入區的標籤
@@ -123,7 +161,7 @@
                     let targetElement = $(element); 
                     let originalText = targetElement.text();
                     let strLen = originalText.length;
-                    let modifiedText = originalText.substring(0,strLen - 1) + "<a href=\"#stage1\">@" + friendName + "</a>&nbsp;";
+                    let modifiedText = originalText.substring(0,strLen - 1) + getStageLink(friendName);
 
                     targetElement.html(modifiedText);
 
@@ -136,7 +174,7 @@
 
             editor.setData(input);
 
-            $('#exampleModal').modal('hide');
+            $('#stageListModal').modal('hide');
         }
 
         function sendReply(){
@@ -154,8 +192,6 @@
                     content : editor.getData()
                 };
 
-                console.log(jsonObj);
-
                 renderReply(jsonObj);
 
                 clearInput();
@@ -163,17 +199,34 @@
         }
 
         function renderReply(replyObj){
-            $.get("/template/mustacheTemplate.mst",function(template){
-                template = $(template).filter("#reply").html();
-                $("#reply-area").append(Mustache.render(template,replyObj));
-            });
+            $("#reply-area").append(Mustache.render(replyTemplate,replyObj));
+        }
+
+        function renderStageList(stageListObj){
+                $("#stage-list").html(""); // 先清空, 再渲染
+                $("#stage-list").append(Mustache.render(stageListTemplate,stageListObj));
+        }
+
+        function getStageLink(stageStr){
+            return Mustache.render(stageLinkTemplate,{stage : stageStr});
         }
 
         function getCurrentTimeStr(){
             var now = new Date();
+            
+            var month = "0" + (now.getMonth() + 1);
+            month = month.substring(month.length - 2,month.length);
 
-            var timeStr = (now.getMonth() + 1) + "-" + now.getDate() + " ";
-            timeStr += now.getHours() + ":" + now.getMinutes();
+            var date = "0" + now.getDate();
+            date = date.substring(date.length - 2,date.length);
+
+            var hour = "0" + now.getHours();
+            hour = hour.substring(hour.length - 2,hour.length);
+
+            var min = "0" + now.getMinutes();
+            min = min.substring(min.length - 2,min.length);
+
+            var timeStr = month + "-" + date + " " + hour + ":" + min;
 
             return timeStr;
         }
@@ -204,8 +257,6 @@
             width: 100%;
             margin-left: 10px;
             margin-bottom: 15px;
-            /* background-color: aquamarine; */
-            /* margin: 0 auto; */
         }
     </style>
 </head>
@@ -239,19 +290,19 @@
             </div>
         </div>
         <div id="reply-area">
-            <div class="card info-card">
+            <div id="B1" class="card info-card">
                 <div class="card-header">
                     <div class="row">
                         <div class="col-12"> Sam </div>
                     </div>
                     <div class="row text-muted">
-                        <div class="col-12"> <span>B1</span> | 05-03 10:00 </div> 
+                        <div class="col-12"> <span class="stage-value" >B1</span> | 05-03 10:00 </div> 
                     </div>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-12">
-                            AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+                            Nice to meet you
                         </div>
                     </div>
                 </div>
@@ -261,23 +312,18 @@
     
     
     <!-- Modal -->
-    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    <div class="modal fade" id="stageListModal" tabindex="-1" role="dialog" aria-labelledby="stageListModalLabel"
         aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">好友名單</h5>
+                    <h5 class="modal-title" id="stageListModalLabel">樓層清單</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
-                    <div class="list-group">
-                        <span class="list-group-item list-group-item-action" onclick="setFriend('好友A')" >好友A</span>
-                        <span class="list-group-item list-group-item-action" onclick="setFriend('好友B')" >好友B</span>
-                        <span class="list-group-item list-group-item-action" onclick="setFriend('好友C')" >好友C</span>
-                        <span class="list-group-item list-group-item-action" onclick="setFriend('好友D')" >好友D</span>
-                        <span class="list-group-item list-group-item-action" onclick="setFriend('好友E')" >好友E</span>
+                    <div id="stage-list" class="list-group">
                     </div>
                 </div>
                 <div class="modal-footer">
